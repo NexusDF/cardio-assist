@@ -10,6 +10,8 @@ import PatientView from '@/features/patients/PatientView.vue'
 import PatientsLayout from '@/features/patients/PatientsLayout.vue'
 import PatientsView from '@/features/patients/PatientsView.vue'
 import SettingsView from '@/features/settings/SettingsView.vue'
+import { i18n } from '@/shared/i18n'
+import { useNavigationStore } from '@/stores/navigation'
 import { usePinStore } from '@/stores/pin'
 import { usePreferencesStore } from '@/stores/preferences'
 import LockView from '@/views/LockView.vue'
@@ -104,9 +106,41 @@ export const router = createRouter({
   ],
 })
 
-router.afterEach(() => {
+router.afterEach((to) => {
+  document.title = pageTitle(to.name)
+  useNavigationStore().remember(to.path)
   window.scrollTo(0, 0)
 })
+
+function pageTitle(name: unknown): string {
+  const brand = 'CardioAssist'
+  switch (name) {
+    case 'calculators':
+      return `${i18n.global.t('nav.calculators')} — ${brand}`
+    case 'calculator-qtc':
+      return `${i18n.global.t('calculators.qtc.title')} — ${brand}`
+    case 'calculator-cha2ds2-vasc':
+      return `${i18n.global.t('calculators.cha2ds2Vasc.title')} — ${brand}`
+    case 'calculator-has-bled':
+      return `${i18n.global.t('calculators.hasBled.title')} — ${brand}`
+    case 'calculator-heart':
+      return `${i18n.global.t('calculators.heart.title')} — ${brand}`
+    case 'ecg':
+      return `${i18n.global.t('ecg.title')} — ${brand}`
+    case 'patients':
+    case 'patient':
+    case 'patient-new':
+      return `${i18n.global.t('patients.title')} — ${brand}`
+    case 'settings':
+      return `${i18n.global.t('settings.title')} — ${brand}`
+    case 'about':
+      return `${i18n.global.t('disclaimer.aboutTitle')} — ${brand}`
+    case 'lock':
+      return `${i18n.global.t('settings.lockTitle')} — ${brand}`
+    default:
+      return brand
+  }
+}
 
 router.beforeEach((to) => {
   const preferences = usePreferencesStore()

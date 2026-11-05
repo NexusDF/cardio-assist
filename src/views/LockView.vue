@@ -24,9 +24,13 @@ async function submit() {
 
 <template>
   <AppScreen :with-tabs="false">
-    <h1 class="text-[2rem] leading-tight font-semibold text-ink">{{ t('settings.lockTitle') }}</h1>
+    <h1 id="lock-title" class="text-[2rem] leading-tight font-semibold text-ink">
+      {{ t('settings.lockTitle') }}
+    </h1>
     <form class="mt-6" @submit.prevent="submit">
+      <label class="sr-only" for="lock-pin">{{ t('settings.lockTitle') }}</label>
       <input
+        id="lock-pin"
         v-model="pin"
         class="min-h-12 w-full rounded-xl border border-line bg-surface px-3 text-base text-ink"
         type="password"

@@ -230,11 +230,13 @@ async function remove() {
       <TrendChart
         v-if="trends.qtc.length > 0"
         :title="t('patients.qtcChart')"
+        :unit="t('patients.qtcUnit')"
         :points="trends.qtc"
       />
       <TrendChart
         v-if="trends.heartRate.length > 0"
         :title="t('patients.hrChart')"
+        :unit="t('patients.hrUnit')"
         :points="trends.heartRate"
       />
     </section>

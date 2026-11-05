@@ -24,7 +24,7 @@ function onChange(event: Event) {
       <label
         v-for="option in options"
         :key="option.value"
-        class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 text-base"
+        class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 text-base leading-snug"
         :class="
           modelValue === option.value
             ? 'border-accent bg-accent text-on-accent'
@@ -39,7 +39,7 @@ function onChange(event: Event) {
           :checked="modelValue === option.value"
           @change="onChange"
         />
-        <span>{{ option.label }}</span>
+        <span class="text-pretty">{{ option.label }}</span>
       </label>
     </div>
   </fieldset>
