@@ -1,5 +1,10 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import CalculatorLayout from '@/features/calculators/CalculatorLayout.vue'
 import CalculatorsView from '@/features/calculators/CalculatorsView.vue'
+import Cha2ds2VascView from '@/features/calculators/Cha2ds2VascView.vue'
+import HasBledView from '@/features/calculators/HasBledView.vue'
+import HeartView from '@/features/calculators/HeartView.vue'
+import QtcView from '@/features/calculators/QtcView.vue'
 import EcgView from '@/features/ecg/EcgView.vue'
 import PatientsView from '@/features/patients/PatientsView.vue'
 import SettingsView from '@/features/settings/SettingsView.vue'
@@ -26,8 +31,34 @@ export const router = createRouter({
     },
     {
       path: '/calculators',
-      name: 'calculators',
-      component: CalculatorsView,
+      component: CalculatorLayout,
+      children: [
+        {
+          path: '',
+          name: 'calculators',
+          component: CalculatorsView,
+        },
+        {
+          path: 'qtc',
+          name: 'calculator-qtc',
+          component: QtcView,
+        },
+        {
+          path: 'cha2ds2-vasc',
+          name: 'calculator-cha2ds2-vasc',
+          component: Cha2ds2VascView,
+        },
+        {
+          path: 'has-bled',
+          name: 'calculator-has-bled',
+          component: HasBledView,
+        },
+        {
+          path: 'heart',
+          name: 'calculator-heart',
+          component: HeartView,
+        },
+      ],
     },
     {
       path: '/ecg',
@@ -45,6 +76,10 @@ export const router = createRouter({
       component: SettingsView,
     },
   ],
+})
+
+router.afterEach(() => {
+  window.scrollTo(0, 0)
 })
 
 router.beforeEach((to) => {

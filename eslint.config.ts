@@ -4,7 +4,7 @@ import eslintConfigPrettier from 'eslint-config-prettier'
 import { globalIgnores } from 'eslint/config'
 
 export default defineConfigWithVueTs(
-  globalIgnores(['dist/**', 'dev-dist/**', 'coverage/**']),
+  globalIgnores(['dist/**', 'dev-dist/**', 'coverage/**', '**/*.vue.js']),
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.strict,
   {
