@@ -47,9 +47,10 @@ function details(ageYears: number | null, sexValue: '' | 'male' | 'female'): str
       <span class="text-sm font-semibold text-ink">{{ t('patients.search') }}</span>
       <input
         v-model="query"
-        class="mt-2 min-h-12 w-full rounded-xl border border-line bg-surface px-3 text-base text-ink"
+        class="mt-2 min-h-12 w-full rounded-xl border border-line bg-surface px-3 text-base text-ink placeholder:text-muted"
         type="search"
         autocomplete="off"
+        :placeholder="t('patients.searchPlaceholder')"
       />
     </label>
     <div class="mt-3 flex flex-wrap gap-2" role="group" :aria-label="t('patients.filter')">

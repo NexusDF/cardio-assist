@@ -32,10 +32,27 @@ const items = [
       <li v-for="item in items" :key="item.name">
         <RouterLink
           :to="{ name: item.name }"
-          class="flex min-h-16 flex-col justify-center rounded-2xl border border-line bg-surface px-4 py-4"
+          class="flex min-h-16 items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-4 active:border-accent active:bg-paper"
         >
-          <span class="text-lg font-semibold text-ink">{{ t(item.title) }}</span>
-          <span class="mt-1 text-sm leading-relaxed text-muted">{{ t(item.summary) }}</span>
+          <span class="min-w-0 flex-1">
+            <span class="block text-lg font-semibold text-ink">{{ t(item.title) }}</span>
+            <span class="mt-1 block text-sm leading-relaxed text-muted">{{ t(item.summary) }}</span>
+          </span>
+          <svg
+            viewBox="0 0 24 24"
+            class="size-6 shrink-0 text-accent"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="M9 6l6 6-6 6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
         </RouterLink>
       </li>
     </ul>
