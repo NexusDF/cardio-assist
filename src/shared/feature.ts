@@ -4,6 +4,7 @@ export type FeatureId = (typeof featureIds)[number]
 
 export interface AppFeature {
   readonly id: FeatureId
-  readonly title: string
-  readonly summary: string
+  readonly path: `/${FeatureId}`
+  readonly titleKey: `nav.${FeatureId}`
+  readonly summaryKey: `features.${FeatureId}.summary`
 }

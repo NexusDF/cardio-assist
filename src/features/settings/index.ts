@@ -2,6 +2,7 @@ import type { AppFeature } from '@/shared/feature'
 
 export const settingsFeature = {
   id: 'settings',
-  title: 'Настройки',
-  summary: 'Тема, язык и то, как данные лежат в браузере этого устройства.',
+  path: '/settings',
+  titleKey: 'nav.settings',
+  summaryKey: 'features.settings.summary',
 } as const satisfies AppFeature

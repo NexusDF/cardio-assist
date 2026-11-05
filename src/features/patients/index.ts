@@ -2,6 +2,7 @@ import type { AppFeature } from '@/shared/feature'
 
 export const patientsFeature = {
   id: 'patients',
-  title: 'Картотека',
-  summary: 'Локальные карточки без фамилии по умолчанию. Записи не уходят на сервер.',
+  path: '/patients',
+  titleKey: 'nav.patients',
+  summaryKey: 'features.patients.summary',
 } as const satisfies AppFeature

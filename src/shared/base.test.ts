@@ -24,8 +24,9 @@ describe('каркас приложения', () => {
     expect(appMeta.routerHistory).toBe('hash')
   })
 
-  it('перечисляет каждый модуль MVP один раз', () => {
+  it('перечисляет каждый модуль MVP один раз и даёт ему свой маршрут', () => {
     expect(features.map((feature) => feature.id)).toEqual([...featureIds])
-    expect(new Set(features.map((feature) => feature.id)).size).toBe(features.length)
+    expect(features.map((feature) => feature.path)).toEqual(featureIds.map((id) => `/${id}`))
+    expect(new Set(features.map((feature) => feature.path)).size).toBe(features.length)
   })
 })

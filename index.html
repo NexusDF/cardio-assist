@@ -6,6 +6,36 @@
     <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0f766e" />
+    <script>
+      ;(function () {
+        var key = 'cardioassist.preferences'
+        var theme = 'system'
+        try {
+          var raw = localStorage.getItem(key)
+          if (raw) {
+            var parsed = JSON.parse(raw)
+            if (
+              parsed &&
+              (parsed.theme === 'light' || parsed.theme === 'dark' || parsed.theme === 'system')
+            ) {
+              theme = parsed.theme
+            }
+          }
+        } catch (error) {
+          theme = 'system'
+        }
+        var resolved =
+          theme === 'system'
+            ? window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light'
+            : theme
+        document.documentElement.dataset.theme = resolved
+        document.documentElement.style.colorScheme = resolved
+        var meta = document.querySelector('meta[name="theme-color"]')
+        if (meta) meta.setAttribute('content', resolved === 'dark' ? '#0e1615' : '#0f766e')
+      })()
+    </script>
     <meta
       name="description"
       content="CardioAssist — вспомогательный инструмент кардиолога. Не является медицинским изделием."

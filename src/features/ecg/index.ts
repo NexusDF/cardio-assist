@@ -2,6 +2,7 @@ import type { AppFeature } from '@/shared/feature'
 
 export const ecgFeature = {
   id: 'ecg',
-  title: 'ЭКГ по фото',
-  summary: 'Снимок ленты, масштаб по сетке и циркуль интервалов. Обработка только на устройстве.',
+  path: '/ecg',
+  titleKey: 'nav.ecg',
+  summaryKey: 'features.ecg.summary',
 } as const satisfies AppFeature
