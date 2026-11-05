@@ -7,20 +7,23 @@ import {
   type PatientInput,
   type PatientRecord,
 } from '@/features/patients/logic/patients'
-import type { ScaleResultRecord } from '@/features/patients/db'
+import type { EcgIntervalsRecord, EcgRecord, ScaleResultRecord } from '@/features/patients/db'
 
 export const usePatientsStore = defineStore('patients', () => {
   const patients = ref<PatientRecord[]>([])
   const results = ref<ScaleResultRecord[]>([])
+  const ecgs = ref<EcgRecord[]>([])
   const ready = ref(false)
 
   async function refresh(): Promise<void> {
-    const [nextPatients, nextResults] = await Promise.all([
+    const [nextPatients, nextResults, nextEcgs] = await Promise.all([
       db.patients.toArray(),
       db.results.toArray(),
+      db.ecgs.toArray(),
     ])
     patients.value = [...nextPatients].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
     results.value = [...nextResults].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    ecgs.value = [...nextEcgs].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     ready.value = true
   }
 
@@ -51,8 +54,9 @@ export const usePatientsStore = defineStore('patients', () => {
   }
 
   async function removePatient(id: string): Promise<void> {
-    await db.transaction('rw', db.patients, db.results, async () => {
+    await db.transaction('rw', db.patients, db.results, db.ecgs, async () => {
       await db.results.where('patientId').equals(id).delete()
+      await db.ecgs.where('patientId').equals(id).delete()
       await db.patients.delete(id)
     })
     await refresh()
@@ -80,7 +84,61 @@ export const usePatientsStore = defineStore('patients', () => {
     return record.id
   }
 
-  return { patients, results, ready, refresh, savePatient, removePatient, saveResult }
+  async function saveEcg(
+    patientId: string,
+    image: Blob,
+    pxPerMs: number | null,
+    intervals: EcgIntervalsRecord,
+    sex: EcgRecord['sex'],
+    now = new Date(),
+  ): Promise<string | null> {
+    const existing = await db.patients.get(patientId)
+    if (existing === undefined) return null
+    const createdAt = now.toISOString()
+    const record: EcgRecord = {
+      id: crypto.randomUUID(),
+      patientId,
+      createdAt,
+      image,
+      pxPerMs,
+      intervals: {
+        rrMs: intervals.rrMs,
+        prMs: intervals.prMs,
+        qrsMs: intervals.qrsMs,
+        qtMs: intervals.qtMs,
+      },
+      sex,
+    }
+    await db.transaction('rw', db.patients, db.ecgs, async () => {
+      await db.ecgs.add(record)
+      await db.patients.update(patientId, { updatedAt: createdAt })
+    })
+    await refresh()
+    return record.id
+  }
+
+  async function removeEcg(id: string): Promise<void> {
+    const existing = await db.ecgs.get(id)
+    if (existing === undefined) return
+    await db.transaction('rw', db.patients, db.ecgs, async () => {
+      await db.ecgs.delete(id)
+      await db.patients.update(existing.patientId, { updatedAt: new Date().toISOString() })
+    })
+    await refresh()
+  }
+
+  return {
+    patients,
+    results,
+    ecgs,
+    ready,
+    refresh,
+    savePatient,
+    removePatient,
+    saveResult,
+    saveEcg,
+    removeEcg,
+  }
 })
 
 function cloneSnapshot(snapshot: CalculatorSnapshot): CalculatorSnapshot {

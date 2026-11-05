@@ -2,7 +2,10 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { CalculatorSnapshot } from '@/features/calculators/logic/drafts'
+import { heartRateFromRrMs } from '@/features/ecg/logic/measure'
 import AppScreen from '@/shared/components/AppScreen.vue'
+import EcgPhoto from '@/features/patients/EcgPhoto.vue'
+import type { EcgRecord } from '@/features/patients/db'
 import RadioGroup from '@/features/calculators/components/RadioGroup.vue'
 import { useAppI18n } from '@/shared/i18n'
 import { usePatientsStore } from '@/stores/patients'
@@ -38,6 +41,8 @@ const patient = computed(
 const results = computed(() =>
   patientsStore.results.filter((item) => item.patientId === patientId.value),
 )
+
+const ecgs = computed(() => patientsStore.ecgs.filter((item) => item.patientId === patientId.value))
 
 const missing = computed(
   () => patientsStore.ready && !isNew.value && patientId.value !== null && patient.value === null,
@@ -88,6 +93,14 @@ function resultLabel(snapshot: CalculatorSnapshot): string {
     return t('calculators.drafts.hasBled', { score: snapshot.score, max: snapshot.maxScore })
   }
   return t('calculators.drafts.heart', { score: snapshot.score, max: snapshot.maxScore })
+}
+
+function ecgLine(record: EcgRecord): string {
+  if (record.intervals.rrMs === null) return t('patients.ecgPlain')
+  const rate = heartRateFromRrMs(record.intervals.rrMs)
+  const rr = t('ecg.ms', { value: record.intervals.rrMs })
+  if (rate === null) return `RR ${rr}`
+  return `RR ${rr} · ${t('ecg.hr', { value: rate })}`
 }
 
 function time(createdAt: string): string {
@@ -200,6 +213,32 @@ async function remove() {
           <p class="text-sm text-muted">{{ time(result.createdAt) }}</p>
         </li>
       </ul>
+    </section>
+    <section v-if="!isNew && patient" class="mt-8">
+      <h2 class="text-sm font-semibold text-ink">{{ t('patients.ecgs') }}</h2>
+      <p v-if="ecgs.length === 0" class="mt-2 text-sm text-muted">{{ t('patients.noEcgs') }}</p>
+      <ul v-else class="mt-3 flex flex-col gap-2">
+        <li
+          v-for="record in ecgs"
+          :key="record.id"
+          class="flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-3"
+        >
+          <EcgPhoto :image="record.image" :alt="t('patients.ecgs')" />
+          <div class="min-w-0 flex-1">
+            <p class="text-base font-semibold text-ink">{{ ecgLine(record) }}</p>
+            <p class="text-sm text-muted">{{ time(record.createdAt) }}</p>
+          </div>
+          <button
+            type="button"
+            class="inline-flex min-h-11 items-center justify-center rounded-xl px-3 text-sm font-semibold text-ink"
+            @click="patientsStore.removeEcg(record.id)"
+          >
+            {{ t('patients.removeEcg') }}
+          </button>
+        </li>
+      </ul>
+    </section>
+    <div v-if="!isNew && patient">
       <button
         v-if="!confirmDelete"
         type="button"
@@ -225,6 +264,6 @@ async function remove() {
           {{ t('patients.cancel') }}
         </button>
       </div>
-    </section>
+    </div>
   </AppScreen>
 </template>
