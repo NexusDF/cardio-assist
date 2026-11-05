@@ -14,12 +14,12 @@ const { t } = useAppI18n()
   >
     <ul class="mx-auto grid max-w-lg grid-cols-4">
       <li v-for="feature in features" :key="feature.id">
-        <RouterLink v-slot="{ href, navigate, isExactActive }" :to="feature.path" custom>
+        <RouterLink v-slot="{ href, navigate, isActive }" :to="feature.path" custom>
           <a
             :href="href"
             class="flex min-h-16 w-full flex-col items-center justify-center gap-1 px-1 py-1.5 text-center text-xs leading-tight font-semibold"
-            :class="isExactActive ? 'text-accent' : 'text-muted'"
-            :aria-current="isExactActive ? 'page' : undefined"
+            :class="isActive ? 'text-accent' : 'text-muted'"
+            :aria-current="isActive ? 'page' : undefined"
             @click="navigate"
           >
             <FeatureIcon :id="feature.id" />
