@@ -14,9 +14,7 @@ const hasFooter = computed(() => Boolean(slots.footer))
 
 <template>
   <main
-    id="content"
-    tabindex="-1"
-    class="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-8 outline-none"
+    class="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 pt-8"
     :class="
       props.withTabs
         ? 'pb-[calc(6.5rem+env(safe-area-inset-bottom))]'

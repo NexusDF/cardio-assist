@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 import OfflineNotice from '@/shared/components/OfflineNotice.vue'
 import { useAppI18n } from '@/shared/i18n'
+import { sectionKey } from '@/shared/navigation'
 import { offlineReadyStorageKey, shouldShowOfflineReady } from '@/shared/offline'
 import TabBar from '@/shared/components/TabBar.vue'
 
@@ -60,6 +61,12 @@ onUnmounted(() => {
     {{ t('nav.skip') }}
   </a>
   <OfflineNotice :ready="showReady" :online="online" @dismiss="dismissReady" />
-  <RouterView />
+  <div id="content" tabindex="-1" class="outline-none">
+    <RouterView v-slot="{ Component, route: current }">
+      <KeepAlive>
+        <component :is="Component" v-if="Component" :key="sectionKey(current.path)" />
+      </KeepAlive>
+    </RouterView>
+  </div>
   <TabBar v-if="showTabs" />
 </template>

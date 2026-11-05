@@ -11,6 +11,7 @@ import PatientsLayout from '@/features/patients/PatientsLayout.vue'
 import PatientsView from '@/features/patients/PatientsView.vue'
 import SettingsView from '@/features/settings/SettingsView.vue'
 import { i18n } from '@/shared/i18n'
+import { useNavigationStore } from '@/stores/navigation'
 import { usePinStore } from '@/stores/pin'
 import { usePreferencesStore } from '@/stores/preferences'
 import LockView from '@/views/LockView.vue'
@@ -107,6 +108,7 @@ export const router = createRouter({
 
 router.afterEach((to) => {
   document.title = pageTitle(to.name)
+  useNavigationStore().remember(to.path)
   window.scrollTo(0, 0)
 })
 
