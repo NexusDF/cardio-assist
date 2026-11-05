@@ -75,12 +75,12 @@ function parseDraft(value: unknown): CalculatorDraft | null {
   if (!isRecord(value)) return null
   if (typeof value.id !== 'string' || value.id === '') return null
   if (typeof value.createdAt !== 'string' || Number.isNaN(Date.parse(value.createdAt))) return null
-  const snapshot = parseSnapshot(value.snapshot)
+  const snapshot = parseCalculatorSnapshot(value.snapshot)
   if (snapshot === null) return null
   return { id: value.id, createdAt: value.createdAt, snapshot }
 }
 
-function parseSnapshot(value: unknown): CalculatorSnapshot | null {
+export function parseCalculatorSnapshot(value: unknown): CalculatorSnapshot | null {
   if (!isRecord(value) || typeof value.calculator !== 'string') return null
   if (value.calculator === 'qtc') return parseQtcSnapshot(value)
   if (value.calculator === 'cha2ds2-vasc' || value.calculator === 'has-bled') {

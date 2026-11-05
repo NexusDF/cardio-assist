@@ -10,7 +10,9 @@ import PatientView from '@/features/patients/PatientView.vue'
 import PatientsLayout from '@/features/patients/PatientsLayout.vue'
 import PatientsView from '@/features/patients/PatientsView.vue'
 import SettingsView from '@/features/settings/SettingsView.vue'
+import { usePinStore } from '@/stores/pin'
 import { usePreferencesStore } from '@/stores/preferences'
+import LockView from '@/views/LockView.vue'
 import DisclaimerView from '@/views/DisclaimerView.vue'
 
 export const router = createRouter({
@@ -24,6 +26,12 @@ export const router = createRouter({
       path: '/disclaimer',
       name: 'disclaimer',
       component: DisclaimerView,
+      meta: { hideTabs: true },
+    },
+    {
+      path: '/lock',
+      name: 'lock',
+      component: LockView,
       meta: { hideTabs: true },
     },
     {
@@ -106,6 +114,13 @@ router.beforeEach((to) => {
     return { name: 'disclaimer' }
   }
   if (preferences.disclaimerAccepted && to.name === 'disclaimer') {
+    return { name: 'calculators' }
+  }
+  const pin = usePinStore()
+  if (pin.configured && !pin.unlocked && to.name !== 'lock') {
+    return { name: 'lock' }
+  }
+  if ((!pin.configured || pin.unlocked) && to.name === 'lock') {
     return { name: 'calculators' }
   }
   return true
