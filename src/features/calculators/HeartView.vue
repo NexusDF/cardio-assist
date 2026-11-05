@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import CalculatorPage from '@/features/calculators/components/CalculatorPage.vue'
 import DraftList from '@/features/calculators/components/DraftList.vue'
 import RadioGroup from '@/features/calculators/components/RadioGroup.vue'
+import SaveToPatient from '@/features/calculators/components/SaveToPatient.vue'
 import SourceNote from '@/features/calculators/components/SourceNote.vue'
 import {
   heartReviewedOn,
@@ -11,16 +12,13 @@ import {
   type HeartLevel,
 } from '@/features/calculators/logic/heart'
 import { useAppI18n } from '@/shared/i18n'
-import { useCalculatorDraftsStore } from '@/stores/calculator-drafts'
 
 const { t } = useAppI18n()
-const drafts = useCalculatorDraftsStore()
 const history = ref('')
 const ecg = ref('')
 const age = ref('')
 const riskFactors = ref('')
 const troponin = ref('')
-const saved = ref(false)
 
 function options(group: 'history' | 'ecg' | 'age' | 'riskFactors' | 'troponin') {
   return [0, 1, 2].map((level) => ({
@@ -58,22 +56,20 @@ const result = computed(() => {
   })
 })
 
-function save() {
+const snapshot = computed(() => {
   const current = result.value
-  if (current === null) return
-  drafts.save({
-    calculator: 'heart',
+  if (current === null) return null
+  return {
+    calculator: 'heart' as const,
     score: current.score,
     maxScore: current.maxScore,
     band: current.band,
-  })
-  saved.value = true
-}
+  }
+})
 
 function setLevel(field: 'history' | 'ecg' | 'age' | 'riskFactors' | 'troponin', value: string) {
   const target = { history, ecg, age, riskFactors, troponin }[field]
   target.value = value
-  saved.value = false
 }
 </script>
 
@@ -134,18 +130,7 @@ function setLevel(field: 'history' | 'ecg' | 'age' | 'riskFactors' | 'troponin',
       </p>
     </section>
     <p v-else class="mt-6 text-sm text-muted">{{ t('calculators.heart.needInput') }}</p>
-    <button
-      type="button"
-      class="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-4 text-base font-semibold"
-      :class="result ? 'bg-accent text-on-accent' : 'border border-line bg-surface text-muted'"
-      :disabled="result === null"
-      @click="save"
-    >
-      {{ t('calculators.save') }}
-    </button>
-    <p v-if="saved" class="mt-3 text-sm leading-relaxed text-muted" role="status">
-      {{ t('calculators.saved') }}
-    </p>
+    <SaveToPatient :snapshot="snapshot" />
     <DraftList calculator="heart" />
     <SourceNote
       :source="t('calculators.heart.source')"

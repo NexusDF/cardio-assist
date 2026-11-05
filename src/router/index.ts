@@ -6,6 +6,8 @@ import HasBledView from '@/features/calculators/HasBledView.vue'
 import HeartView from '@/features/calculators/HeartView.vue'
 import QtcView from '@/features/calculators/QtcView.vue'
 import EcgView from '@/features/ecg/EcgView.vue'
+import PatientView from '@/features/patients/PatientView.vue'
+import PatientsLayout from '@/features/patients/PatientsLayout.vue'
 import PatientsView from '@/features/patients/PatientsView.vue'
 import SettingsView from '@/features/settings/SettingsView.vue'
 import { usePreferencesStore } from '@/stores/preferences'
@@ -67,8 +69,24 @@ export const router = createRouter({
     },
     {
       path: '/patients',
-      name: 'patients',
-      component: PatientsView,
+      component: PatientsLayout,
+      children: [
+        {
+          path: '',
+          name: 'patients',
+          component: PatientsView,
+        },
+        {
+          path: 'new',
+          name: 'patient-new',
+          component: PatientView,
+        },
+        {
+          path: ':id',
+          name: 'patient',
+          component: PatientView,
+        },
+      ],
     },
     {
       path: '/settings',

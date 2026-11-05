@@ -4,20 +4,18 @@ import CalculatorPage from '@/features/calculators/components/CalculatorPage.vue
 import DraftList from '@/features/calculators/components/DraftList.vue'
 import NumberField from '@/features/calculators/components/NumberField.vue'
 import RadioGroup from '@/features/calculators/components/RadioGroup.vue'
+import SaveToPatient from '@/features/calculators/components/SaveToPatient.vue'
 import SourceNote from '@/features/calculators/components/SourceNote.vue'
 import { parsePositiveNumber } from '@/features/calculators/logic/parse'
 import { computeQtc, qtcReviewedOn, type QtcBand, type Sex } from '@/features/calculators/logic/qtc'
 import { useAppI18n } from '@/shared/i18n'
-import { useCalculatorDraftsStore } from '@/stores/calculator-drafts'
 
 const { t } = useAppI18n()
-const drafts = useCalculatorDraftsStore()
 
 const qt = ref('')
 const rateMode = ref<'heart-rate' | 'rr'>('heart-rate')
 const rate = ref('')
 const sex = ref<Sex | ''>('')
-const saved = ref(false)
 
 const sexOptions = computed(() => [
   { value: 'male', label: t('calculators.qtc.male') },
@@ -44,6 +42,19 @@ const result = computed(() => {
   })
 })
 
+const snapshot = computed(() => {
+  const current = result.value
+  if (current === null) return null
+  return {
+    calculator: 'qtc' as const,
+    sex: current.sex,
+    qtMs: current.qtMs,
+    heartRateBpm: current.heartRateBpm,
+    rrSeconds: current.rrSeconds,
+    formulas: current.formulas,
+  }
+})
+
 function bandLabel(band: QtcBand): string {
   if (band === 'high') return t('calculators.qtc.bands.high')
   if (band === 'prolonged') return t('calculators.qtc.bands.prolonged')
@@ -60,28 +71,12 @@ function formulaName(id: 'bazett' | 'fridericia' | 'framingham' | 'hodges'): str
   return t(`calculators.qtc.formulas.${id}`)
 }
 
-function save() {
-  const current = result.value
-  if (current === null) return
-  drafts.save({
-    calculator: 'qtc',
-    sex: current.sex,
-    qtMs: current.qtMs,
-    heartRateBpm: current.heartRateBpm,
-    rrSeconds: current.rrSeconds,
-    formulas: current.formulas,
-  })
-  saved.value = true
-}
-
 function onSex(value: string) {
   sex.value = value === 'female' ? 'female' : 'male'
-  saved.value = false
 }
 
 function onRateMode(value: string) {
   rateMode.value = value === 'rr' ? 'rr' : 'heart-rate'
-  saved.value = false
 }
 </script>
 
@@ -93,7 +88,6 @@ function onRateMode(value: string) {
         v-model="qt"
         :label="t('calculators.qtc.qt')"
         :hint="t('calculators.qtc.qtHint')"
-        @update:model-value="saved = false"
       />
       <RadioGroup
         :legend="t('calculators.qtc.rateMode')"
@@ -112,7 +106,6 @@ function onRateMode(value: string) {
             ? t('calculators.qtc.heartRateHint')
             : t('calculators.qtc.rrHint')
         "
-        @update:model-value="saved = false"
       />
       <RadioGroup
         :legend="t('calculators.qtc.sex')"
@@ -150,18 +143,7 @@ function onRateMode(value: string) {
       {{ t('calculators.qtc.needInput') }}
     </p>
 
-    <button
-      type="button"
-      class="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-4 text-base font-semibold"
-      :class="result ? 'bg-accent text-on-accent' : 'border border-line bg-surface text-muted'"
-      :disabled="result === null"
-      @click="save"
-    >
-      {{ t('calculators.save') }}
-    </button>
-    <p v-if="saved" class="mt-3 text-sm leading-relaxed text-muted" role="status">
-      {{ t('calculators.saved') }}
-    </p>
+    <SaveToPatient :snapshot="snapshot" />
     <DraftList calculator="qtc" />
     <SourceNote
       :source="t('calculators.qtc.source')"

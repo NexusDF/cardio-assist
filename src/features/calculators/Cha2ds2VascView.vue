@@ -5,14 +5,13 @@ import CheckField from '@/features/calculators/components/CheckField.vue'
 import DraftList from '@/features/calculators/components/DraftList.vue'
 import NumberField from '@/features/calculators/components/NumberField.vue'
 import RadioGroup from '@/features/calculators/components/RadioGroup.vue'
+import SaveToPatient from '@/features/calculators/components/SaveToPatient.vue'
 import SourceNote from '@/features/calculators/components/SourceNote.vue'
 import { cha2ds2Vasc, cha2ds2VascReviewedOn } from '@/features/calculators/logic/cha2ds2vasc'
 import { parseAgeYears } from '@/features/calculators/logic/parse'
 import { useAppI18n } from '@/shared/i18n'
-import { useCalculatorDraftsStore } from '@/stores/calculator-drafts'
 
 const { t } = useAppI18n()
-const drafts = useCalculatorDraftsStore()
 const age = ref('')
 const female = ref<'female' | 'male' | ''>('')
 const heartFailure = ref(false)
@@ -20,7 +19,6 @@ const hypertension = ref(false)
 const diabetes = ref(false)
 const stroke = ref(false)
 const vascularDisease = ref(false)
-const saved = ref(false)
 
 const sexOptions = computed(() => [
   { value: 'male', label: t('calculators.qtc.male') },
@@ -55,16 +53,18 @@ const points = computed(() => {
   ] as const
 })
 
-function save() {
+const snapshot = computed(() => {
   const current = result.value
-  if (current === null) return
-  drafts.save({ calculator: 'cha2ds2-vasc', score: current.score, maxScore: current.maxScore })
-  saved.value = true
-}
+  if (current === null) return null
+  return {
+    calculator: 'cha2ds2-vasc' as const,
+    score: current.score,
+    maxScore: current.maxScore,
+  }
+})
 
 function onSex(value: string) {
   female.value = value === 'female' ? 'female' : 'male'
-  saved.value = false
 }
 </script>
 
@@ -72,12 +72,7 @@ function onSex(value: string) {
   <CalculatorPage :title="t('calculators.cha2ds2Vasc.title')">
     <p class="mt-3 text-base leading-relaxed text-muted">{{ t('calculators.cha2ds2Vasc.lead') }}</p>
     <div class="mt-6 flex flex-col gap-3">
-      <NumberField
-        v-model="age"
-        numeric
-        :label="t('calculators.age')"
-        @update:model-value="saved = false"
-      />
+      <NumberField v-model="age" numeric :label="t('calculators.age')" />
       <RadioGroup
         :legend="t('calculators.qtc.sex')"
         name="cha-sex"
@@ -85,31 +80,11 @@ function onSex(value: string) {
         :options="sexOptions"
         @update:model-value="onSex"
       />
-      <CheckField
-        v-model="heartFailure"
-        :label="t('calculators.cha2ds2Vasc.heartFailure')"
-        @update:model-value="saved = false"
-      />
-      <CheckField
-        v-model="hypertension"
-        :label="t('calculators.cha2ds2Vasc.hypertension')"
-        @update:model-value="saved = false"
-      />
-      <CheckField
-        v-model="diabetes"
-        :label="t('calculators.cha2ds2Vasc.diabetes')"
-        @update:model-value="saved = false"
-      />
-      <CheckField
-        v-model="stroke"
-        :label="t('calculators.cha2ds2Vasc.stroke')"
-        @update:model-value="saved = false"
-      />
-      <CheckField
-        v-model="vascularDisease"
-        :label="t('calculators.cha2ds2Vasc.vascular')"
-        @update:model-value="saved = false"
-      />
+      <CheckField v-model="heartFailure" :label="t('calculators.cha2ds2Vasc.heartFailure')" />
+      <CheckField v-model="hypertension" :label="t('calculators.cha2ds2Vasc.hypertension')" />
+      <CheckField v-model="diabetes" :label="t('calculators.cha2ds2Vasc.diabetes')" />
+      <CheckField v-model="stroke" :label="t('calculators.cha2ds2Vasc.stroke')" />
+      <CheckField v-model="vascularDisease" :label="t('calculators.cha2ds2Vasc.vascular')" />
     </div>
     <section
       v-if="result"
@@ -130,18 +105,7 @@ function onSex(value: string) {
       </p>
     </section>
     <p v-else class="mt-6 text-sm text-muted">{{ t('calculators.cha2ds2Vasc.needInput') }}</p>
-    <button
-      type="button"
-      class="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-4 text-base font-semibold"
-      :class="result ? 'bg-accent text-on-accent' : 'border border-line bg-surface text-muted'"
-      :disabled="result === null"
-      @click="save"
-    >
-      {{ t('calculators.save') }}
-    </button>
-    <p v-if="saved" class="mt-3 text-sm leading-relaxed text-muted" role="status">
-      {{ t('calculators.saved') }}
-    </p>
+    <SaveToPatient :snapshot="snapshot" />
     <DraftList calculator="cha2ds2-vasc" />
     <SourceNote
       :source="t('calculators.cha2ds2Vasc.source')"
