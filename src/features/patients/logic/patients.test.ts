@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { filterPatients, normalizePatient, type PatientRecord } from './patients'
+import {
+  filterPatients,
+  normalizePatient,
+  patientSexFromQtc,
+  type PatientRecord,
+} from './patients'
 
 const patient = (patch: Partial<PatientRecord> & Pick<PatientRecord, 'id'>): PatientRecord => ({
   code: '',
@@ -34,6 +39,15 @@ describe('normalizePatient', () => {
     expect(normalizePatient({ code: '', ageYears: '131', sex: '', notes: '' })).toBeNull()
     expect(normalizePatient({ code: '', ageYears: '75,5', sex: '', notes: '' })).toBeNull()
     expect(normalizePatient({ code: '', ageYears: '-1', sex: '', notes: '' })).toBeNull()
+  })
+})
+
+describe('patientSexFromQtc', () => {
+  it('keeps the sex chosen for QTc and ignores other calculators', () => {
+    expect(patientSexFromQtc({ calculator: 'qtc', sex: 'female' })).toBe('female')
+    expect(patientSexFromQtc({ calculator: 'qtc', sex: 'male' })).toBe('male')
+    expect(patientSexFromQtc({ calculator: 'has-bled' })).toBe('')
+    expect(patientSexFromQtc({ calculator: 'qtc', sex: 'other' })).toBe('')
   })
 })
 

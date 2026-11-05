@@ -27,6 +27,14 @@ export interface NormalizedPatient {
   readonly notes: string
 }
 
+export function patientSexFromQtc(snapshot: {
+  readonly calculator: string
+  readonly sex?: string
+}): PatientSex {
+  if (snapshot.calculator !== 'qtc') return ''
+  return snapshot.sex === 'male' || snapshot.sex === 'female' ? snapshot.sex : ''
+}
+
 export function normalizePatient(input: PatientInput): NormalizedPatient | null {
   const ageRaw = input.ageYears.trim()
   const ageYears = ageRaw === '' ? null : parseAgeYears(ageRaw)

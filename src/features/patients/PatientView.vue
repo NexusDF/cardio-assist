@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { CalculatorSnapshot } from '@/features/calculators/logic/drafts'
 import { heartRateFromRrMs } from '@/features/ecg/logic/measure'
@@ -22,6 +22,7 @@ const sex = ref<PatientSex>('')
 const notes = ref('')
 const ageError = ref(false)
 const saved = ref(false)
+const savedNotice = ref<HTMLElement | null>(null)
 const confirmDelete = ref(false)
 const loadedFor = ref<string | null>(null)
 
@@ -53,7 +54,7 @@ onMounted(() => {
 })
 
 watch(
-  [() => patientsStore.ready, patientId, isNew],
+  [() => patientsStore.ready, patientId, isNew, patient],
   () => {
     if (isNew.value) {
       if (loadedFor.value === 'new') return
@@ -127,6 +128,18 @@ async function save() {
     loadedFor.value = id
     await router.replace({ name: 'patient', params: { id } })
   }
+  await nextTick()
+  revealSaved()
+}
+
+function revealSaved() {
+  const notice = savedNotice.value
+  if (notice === null) return
+  const tab = document.querySelector('nav')
+  const tabTop = tab?.getBoundingClientRect().top ?? window.innerHeight
+  const bottom = notice.getBoundingClientRect().bottom
+  const overlap = bottom - (tabTop - 12)
+  if (overlap > 0) window.scrollBy({ top: overlap })
 }
 
 async function remove() {
@@ -194,9 +207,16 @@ async function remove() {
         type="submit"
         class="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-accent px-4 text-base font-semibold text-on-accent"
       >
-        {{ t('patients.save') }}
+        {{ saved ? t('patients.savedShort') : t('patients.save') }}
       </button>
-      <p v-if="saved" class="text-sm text-muted" role="status">{{ t('patients.saved') }}</p>
+      <p
+        v-if="saved"
+        ref="savedNotice"
+        class="rounded-2xl border border-accent bg-surface px-4 py-3 text-base font-semibold text-ink"
+        role="status"
+      >
+        {{ t('patients.saved') }}
+      </p>
     </form>
     <section v-if="!isNew && patient" class="mt-8">
       <h2 class="text-sm font-semibold text-ink">{{ t('patients.results') }}</h2>

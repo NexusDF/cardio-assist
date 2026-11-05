@@ -6,6 +6,7 @@ import {
   normalizePatient,
   type PatientInput,
   type PatientRecord,
+  type PatientSex,
 } from '@/features/patients/logic/patients'
 import type { EcgIntervalsRecord, EcgRecord, ScaleResultRecord } from '@/features/patients/db'
 
@@ -51,6 +52,14 @@ export const usePatientsStore = defineStore('patients', () => {
     await db.patients.update(id, { ...normalized, updatedAt: timestamp })
     await refresh()
     return id
+  }
+
+  async function adoptSex(patientId: string, sex: PatientSex): Promise<void> {
+    if (sex === '') return
+    const existing = await db.patients.get(patientId)
+    if (existing === undefined || existing.sex !== '') return
+    await db.patients.update(patientId, { sex })
+    await refresh()
   }
 
   async function removePatient(id: string): Promise<void> {
@@ -134,6 +143,7 @@ export const usePatientsStore = defineStore('patients', () => {
     ready,
     refresh,
     savePatient,
+    adoptSex,
     removePatient,
     saveResult,
     saveEcg,

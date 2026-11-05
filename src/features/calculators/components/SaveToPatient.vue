@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import type { CalculatorSnapshot } from '@/features/calculators/logic/drafts'
+import { patientSexFromQtc } from '@/features/patients/logic/patients'
 import { useAppI18n } from '@/shared/i18n'
 import { usePatientsStore } from '@/stores/patients'
 
@@ -40,6 +41,7 @@ async function saveTo(patientId: string) {
   try {
     const id = await patientsStore.saveResult(patientId, props.snapshot)
     if (id !== null) {
+      await patientsStore.adoptSex(patientId, patientSexFromQtc(props.snapshot))
       savedPatientId.value = patientId
       open.value = false
     }
@@ -55,7 +57,7 @@ async function createAndSave() {
     const patientId = await patientsStore.savePatient(null, {
       code: '',
       ageYears: '',
-      sex: '',
+      sex: patientSexFromQtc(props.snapshot),
       notes: '',
     })
     if (patientId === null) return

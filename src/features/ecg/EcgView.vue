@@ -176,6 +176,7 @@ async function saveTo(patientId: string) {
       sex.value,
     )
     if (id !== null) {
+      await patientsStore.adoptSex(patientId, sex.value)
       savedPatientId.value = patientId
       open.value = false
     }
@@ -191,7 +192,7 @@ async function createAndSave() {
     const patientId = await patientsStore.savePatient(null, {
       code: '',
       ageYears: '',
-      sex: '',
+      sex: sex.value,
       notes: '',
     })
     if (patientId === null) return
