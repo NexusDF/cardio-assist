@@ -69,6 +69,49 @@ const intervals = computed(() => {
 const heartRate = computed(() =>
   intervals.value.rrMs === null ? null : heartRateFromRrMs(intervals.value.rrMs),
 )
+
+const resultRows = computed(() => {
+  const duration = (value: number | null) => (value === null ? '—' : t('ecg.ms', { value }))
+  const rate = heartRate.value
+  return [
+    {
+      id: 'calibration',
+      label: t('ecg.calibration'),
+      value: duration(parsePositiveNumber(knownMs.value)),
+      missing: false,
+    },
+    {
+      id: 'rr',
+      label: t('ecg.rr'),
+      value: duration(intervals.value.rrMs),
+      missing: intervals.value.rrMs === null,
+    },
+    {
+      id: 'hr',
+      label: t('ecg.heartRate'),
+      value: rate === null ? '—' : t('ecg.perMinute', { value: rate }),
+      missing: rate === null,
+    },
+    {
+      id: 'pr',
+      label: t('ecg.pr'),
+      value: duration(intervals.value.prMs),
+      missing: intervals.value.prMs === null,
+    },
+    {
+      id: 'qrs',
+      label: t('ecg.qrs'),
+      value: duration(intervals.value.qrsMs),
+      missing: intervals.value.qrsMs === null,
+    },
+    {
+      id: 'qt',
+      label: t('ecg.qt'),
+      value: duration(intervals.value.qtMs),
+      missing: intervals.value.qtMs === null,
+    },
+  ]
+})
 const qtc = computed(() => qtcFromIntervals(intervals.value.qtMs, intervals.value.rrMs, sex.value))
 const savedPatient = computed(
   () => patientsStore.patients.find((patient) => patient.id === savedPatientId.value) ?? null,
@@ -289,16 +332,26 @@ onBeforeUnmount(() => {
         <p v-if="pxPerMs === null" class="mt-2 text-sm leading-relaxed text-muted">
           {{ t('ecg.needScale') }}
         </p>
-        <ul v-else class="mt-3 flex flex-col gap-1 text-base text-ink">
-          <li>{{ t('ecg.scaleReady') }}</li>
-          <li>RR: {{ intervals.rrMs === null ? '—' : t('ecg.ms', { value: intervals.rrMs }) }}</li>
-          <li v-if="heartRate !== null">{{ t('ecg.hr', { value: heartRate }) }}</li>
-          <li>PR: {{ intervals.prMs === null ? '—' : t('ecg.ms', { value: intervals.prMs }) }}</li>
-          <li>
-            QRS: {{ intervals.qrsMs === null ? '—' : t('ecg.ms', { value: intervals.qrsMs }) }}
-          </li>
-          <li>QT: {{ intervals.qtMs === null ? '—' : t('ecg.ms', { value: intervals.qtMs }) }}</li>
-        </ul>
+        <dl v-else class="mt-3 flex flex-col gap-2.5">
+          <div v-for="row in resultRows" :key="row.id" class="flex items-center gap-3">
+            <dt
+              class="shrink-0 text-lg font-semibold"
+              :class="row.id === tool ? 'text-accent' : 'text-muted'"
+            >
+              {{ row.label }}
+            </dt>
+            <span
+              class="h-0.5 min-w-4 flex-1 self-center bg-[repeating-linear-gradient(to_right,var(--line)_0_6px,transparent_6px_11px)]"
+              aria-hidden="true"
+            />
+            <dd
+              class="shrink-0 text-base tabular-nums"
+              :class="row.missing ? 'text-muted' : 'font-semibold text-ink'"
+            >
+              {{ row.value }}
+            </dd>
+          </div>
+        </dl>
       </section>
       <div class="mt-5">
         <RadioGroup

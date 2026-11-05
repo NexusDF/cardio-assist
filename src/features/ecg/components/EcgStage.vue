@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
   clampScale,
   fitImage,
@@ -22,6 +22,8 @@ const emit = defineEmits<{
 const { t } = useAppI18n()
 const host = ref<HTMLDivElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
+const shell = ref<HTMLElement | null>(null)
+const expanded = ref(false)
 const transform = ref<ViewTransform>({ scale: 1, originX: 0, originY: 0 })
 
 const pointers = new Map<number, { x: number; y: number }>()
@@ -95,6 +97,46 @@ function localPoint(event: PointerEvent): { x: number; y: number } | null {
   if (element === null) return null
   const rect = element.getBoundingClientRect()
   return { x: event.clientX - rect.left, y: event.clientY - rect.top }
+}
+
+async function setExpanded(next: boolean) {
+  if (expanded.value === next) return
+  const frame = shell.value
+  expanded.value = next
+  document.documentElement.style.overflow = next ? 'hidden' : ''
+  if (frame !== null) {
+    const fullscreen = next
+      ? frame.requestFullscreen()
+      : document.fullscreenElement === frame
+        ? document.exitFullscreen()
+        : Promise.resolve()
+    void fullscreen.catch(() => {
+      // The overlay still covers the page when the browser refuses fullscreen.
+    })
+  }
+  await nextTick()
+  await nextFrame()
+  resize()
+  fit()
+}
+
+function onFullscreenChange() {
+  if (document.fullscreenElement === null && expanded.value) {
+    void setExpanded(false)
+    return
+  }
+  resize()
+  fit()
+}
+
+function onKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && expanded.value) void setExpanded(false)
+}
+
+function nextFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => resolve())
+  })
 }
 
 function zoomBy(factor: number) {
@@ -202,10 +244,16 @@ onMounted(() => {
     observer = new ResizeObserver(() => resize())
     observer.observe(host.value)
   }
+  document.addEventListener('fullscreenchange', onFullscreenChange)
+  window.addEventListener('keydown', onKeyDown)
 })
 
 onBeforeUnmount(() => {
   observer?.disconnect()
+  document.removeEventListener('fullscreenchange', onFullscreenChange)
+  window.removeEventListener('keydown', onKeyDown)
+  if (expanded.value) document.documentElement.style.overflow = ''
+  if (document.fullscreenElement === shell.value) void document.exitFullscreen()
 })
 
 watch(
@@ -221,40 +269,87 @@ defineExpose({ fit, zoomBy })
 </script>
 
 <template>
-  <div>
-    <div ref="host" class="h-80 w-full overflow-hidden rounded-2xl border border-line">
-      <canvas
-        ref="canvas"
-        class="block h-full w-full touch-none"
-        :aria-label="t('ecg.stage')"
-        @pointerdown="onPointerDown"
-        @pointermove="onPointerMove"
-        @pointerup="onPointerUp"
-        @pointercancel="onPointerUp"
-      />
+  <Teleport to="body" :disabled="!expanded">
+    <div
+      ref="shell"
+      :class="expanded ? 'fixed inset-0 z-40 flex flex-col bg-[#0e1615]' : undefined"
+      :role="expanded ? 'dialog' : undefined"
+      :aria-modal="expanded ? true : undefined"
+      :aria-label="expanded ? t('ecg.fullscreen') : undefined"
+    >
+      <div :class="expanded ? 'relative min-h-0 flex-1' : 'relative'">
+        <div
+          ref="host"
+          class="w-full overflow-hidden"
+          :class="expanded ? 'h-full' : 'h-80 rounded-2xl border border-line'"
+        >
+          <canvas
+            ref="canvas"
+            class="block h-full w-full touch-none"
+            :aria-label="t('ecg.stage')"
+            @pointerdown="onPointerDown"
+            @pointermove="onPointerMove"
+            @pointerup="onPointerUp"
+            @pointercancel="onPointerUp"
+          />
+        </div>
+        <button
+          type="button"
+          class="absolute top-3 right-3 inline-flex size-11 items-center justify-center rounded-full border border-line bg-surface text-ink"
+          :aria-pressed="expanded"
+          :aria-label="expanded ? t('ecg.exitFullscreen') : t('ecg.fullscreen')"
+          @click="setExpanded(!expanded)"
+        >
+          <svg viewBox="0 0 24 24" class="size-5" aria-hidden="true" focusable="false">
+            <path
+              v-if="expanded"
+              d="M9 4v4H5M15 4v4h4M9 20v-4H5M15 20v-4h4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              v-else
+              d="M9 4H5v4M15 4h4v4M9 20H5v-4M15 20h4v-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
+      <div
+        :class="expanded ? 'bg-paper px-5 pt-3' : 'mt-3'"
+        :style="expanded ? 'padding-bottom: max(0.75rem, env(safe-area-inset-bottom))' : undefined"
+      >
+        <div class="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            class="inline-flex min-h-12 items-center justify-center rounded-xl border border-line bg-surface text-base font-semibold text-ink"
+            @click="zoomBy(1 / 1.25)"
+          >
+            {{ t('ecg.zoomOut') }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-12 items-center justify-center rounded-xl border border-line bg-surface text-base font-semibold text-ink"
+            @click="fit"
+          >
+            {{ t('ecg.fit') }}
+          </button>
+          <button
+            type="button"
+            class="inline-flex min-h-12 items-center justify-center rounded-xl border border-line bg-surface text-base font-semibold text-ink"
+            @click="zoomBy(1.25)"
+          >
+            {{ t('ecg.zoomIn') }}
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="mt-3 grid grid-cols-3 gap-2">
-      <button
-        type="button"
-        class="inline-flex min-h-12 items-center justify-center rounded-xl border border-line bg-surface text-base font-semibold text-ink"
-        @click="zoomBy(1 / 1.25)"
-      >
-        {{ t('ecg.zoomOut') }}
-      </button>
-      <button
-        type="button"
-        class="inline-flex min-h-12 items-center justify-center rounded-xl border border-line bg-surface text-base font-semibold text-ink"
-        @click="fit"
-      >
-        {{ t('ecg.fit') }}
-      </button>
-      <button
-        type="button"
-        class="inline-flex min-h-12 items-center justify-center rounded-xl border border-line bg-surface text-base font-semibold text-ink"
-        @click="zoomBy(1.25)"
-      >
-        {{ t('ecg.zoomIn') }}
-      </button>
-    </div>
-  </div>
+  </Teleport>
 </template>

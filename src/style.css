@@ -115,5 +115,139 @@ button {
 }
 
 #app {
+  position: relative;
   min-height: 100dvh;
+}
+
+#content {
+  min-height: 100dvh;
+  background: var(--paper);
+  view-transition-name: tab-panel;
+}
+
+.tab-bar {
+  view-transition-name: tab-bar;
+}
+
+::view-transition-group(tab-panel),
+::view-transition-group(tab-bar),
+::view-transition-group(root) {
+  animation: none;
+}
+
+::view-transition-group(tab-panel) {
+  z-index: 1;
+}
+
+::view-transition-group(tab-bar) {
+  z-index: 2;
+}
+
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-old(tab-bar),
+::view-transition-new(tab-bar) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root),
+::view-transition-old(tab-bar) {
+  display: none;
+}
+
+::view-transition-old(tab-panel),
+::view-transition-new(tab-panel) {
+  background: var(--paper);
+  mix-blend-mode: normal;
+  animation-duration: 280ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-new(tab-panel) {
+  z-index: 1;
+}
+
+html[data-tab-motion='forward']::view-transition-old(tab-panel) {
+  animation-name: tab-leave-forward;
+}
+
+html[data-tab-motion='forward']::view-transition-new(tab-panel) {
+  animation-name: tab-enter-forward;
+}
+
+html[data-tab-motion='back']::view-transition-old(tab-panel) {
+  animation-name: tab-leave-back;
+}
+
+html[data-tab-motion='back']::view-transition-new(tab-panel) {
+  animation-name: tab-enter-back;
+}
+
+.tab-snapshot {
+  position: absolute;
+  z-index: 0;
+  inset: 0 auto auto 0;
+  width: 100%;
+  pointer-events: none;
+  background: var(--paper);
+}
+
+#content.tab-enter-forward,
+#content.tab-enter-back {
+  position: relative;
+  z-index: 1;
+}
+
+.tab-snapshot.is-gone.tab-snapshot-forward {
+  opacity: 0;
+  transform: translateX(-1rem);
+}
+
+.tab-snapshot.is-gone.tab-snapshot-back {
+  opacity: 0;
+  transform: translateX(1rem);
+}
+
+#content.tab-enter-forward {
+  animation: tab-enter-forward 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#content.tab-enter-back {
+  animation: tab-enter-back 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes tab-enter-forward {
+  from {
+    transform: translateX(1.25rem);
+  }
+}
+
+@keyframes tab-leave-forward {
+  to {
+    opacity: 0;
+    transform: translateX(-1.25rem);
+  }
+}
+
+@keyframes tab-enter-back {
+  from {
+    transform: translateX(-1.25rem);
+  }
+}
+
+@keyframes tab-leave-back {
+  to {
+    opacity: 0;
+    transform: translateX(1.25rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(tab-panel),
+  ::view-transition-new(tab-panel),
+  #content.tab-enter-forward,
+  #content.tab-enter-back {
+    animation: none;
+  }
 }
