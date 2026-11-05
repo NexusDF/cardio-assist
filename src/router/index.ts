@@ -11,6 +11,7 @@ import PatientsLayout from '@/features/patients/PatientsLayout.vue'
 import PatientsView from '@/features/patients/PatientsView.vue'
 import SettingsView from '@/features/settings/SettingsView.vue'
 import { i18n } from '@/shared/i18n'
+import { installTabTransitions } from '@/shared/tab-transition'
 import { useNavigationStore } from '@/stores/navigation'
 import { usePinStore } from '@/stores/pin'
 import { usePreferencesStore } from '@/stores/preferences'
@@ -105,6 +106,8 @@ export const router = createRouter({
     },
   ],
 })
+
+installTabTransitions(router)
 
 router.afterEach((to) => {
   document.title = pageTitle(to.name)
