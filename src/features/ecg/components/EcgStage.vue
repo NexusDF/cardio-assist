@@ -226,6 +226,7 @@ defineExpose({ fit, zoomBy })
       <canvas
         ref="canvas"
         class="block h-full w-full touch-none"
+        :aria-label="t('ecg.stage')"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
         @pointerup="onPointerUp"
