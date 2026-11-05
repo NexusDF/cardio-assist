@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  filterPatients,
-  normalizePatient,
-  patientSexFromQtc,
-  type PatientRecord,
-} from './patients'
+import { filterPatients, normalizePatient, patientSexFromQtc, type PatientRecord } from './patients'
 
 const patient = (patch: Partial<PatientRecord> & Pick<PatientRecord, 'id'>): PatientRecord => ({
   code: '',

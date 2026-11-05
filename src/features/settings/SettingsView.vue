@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DataSettings from '@/features/settings/DataSettings.vue'
 import ThemeIcon from '@/features/settings/ThemeIcon.vue'
 import AppScreen from '@/shared/components/AppScreen.vue'
 import { useAppI18n } from '@/shared/i18n'
@@ -68,6 +69,8 @@ function chooseTheme(next: ThemePreference) {
     >
       {{ t('settings.about') }}
     </RouterLink>
+
+    <DataSettings />
 
     <p class="mt-8 text-sm leading-relaxed text-muted">{{ t('settings.storage') }}</p>
     <p class="mt-4 flex items-center gap-2 text-sm font-semibold text-ink">

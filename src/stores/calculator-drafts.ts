@@ -29,11 +29,16 @@ export const useCalculatorDraftsStore = defineStore('calculator-drafts', () => {
     persist()
   }
 
+  function clear() {
+    drafts.value = []
+    persist()
+  }
+
   function persist() {
     localStorage.setItem(calculatorDraftStorageKey, serializeDrafts(drafts.value))
   }
 
-  return { drafts, save, remove }
+  return { drafts, save, remove, clear }
 })
 
 function readRaw(): string | null {

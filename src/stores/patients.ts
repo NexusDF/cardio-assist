@@ -9,6 +9,12 @@ import {
   type PatientSex,
 } from '@/features/patients/logic/patients'
 import type { EcgIntervalsRecord, EcgRecord, ScaleResultRecord } from '@/features/patients/db'
+import {
+  mergeArchive,
+  serializeEcg,
+  type ArchiveCounts,
+  type ArchivePayload,
+} from '@/features/settings/logic/archive'
 
 export const usePatientsStore = defineStore('patients', () => {
   const patients = ref<PatientRecord[]>([])
@@ -126,6 +132,48 @@ export const usePatientsStore = defineStore('patients', () => {
     return record.id
   }
 
+  async function exportArchive(now = new Date()): Promise<ArchivePayload> {
+    const [storedPatients, storedResults, storedEcgs] = await Promise.all([
+      db.patients.toArray(),
+      db.results.toArray(),
+      db.ecgs.toArray(),
+    ])
+    return {
+      exportedAt: now.toISOString(),
+      patients: storedPatients,
+      results: storedResults,
+      ecgs: await Promise.all(storedEcgs.map((record) => serializeEcg(record))),
+    }
+  }
+
+  async function importArchive(incoming: ArchivePayload): Promise<ArchiveCounts> {
+    const [storedPatients, storedResults, storedEcgs] = await Promise.all([
+      db.patients.toArray(),
+      db.results.toArray(),
+      db.ecgs.toArray(),
+    ])
+    const merged = mergeArchive(storedPatients, storedResults, storedEcgs, incoming)
+    const patientIds = new Set(storedPatients.map((patient) => patient.id))
+    const resultIds = new Set(storedResults.map((result) => result.id))
+    const ecgIds = new Set(storedEcgs.map((record) => record.id))
+    await db.transaction('rw', db.patients, db.results, db.ecgs, async () => {
+      await db.patients.bulkAdd(merged.patients.filter((patient) => !patientIds.has(patient.id)))
+      await db.results.bulkAdd(merged.results.filter((result) => !resultIds.has(result.id)))
+      await db.ecgs.bulkAdd(merged.ecgs.filter((record) => !ecgIds.has(record.id)))
+    })
+    await refresh()
+    return merged.added
+  }
+
+  async function deleteAll(): Promise<void> {
+    await db.transaction('rw', db.patients, db.results, db.ecgs, async () => {
+      await db.patients.clear()
+      await db.results.clear()
+      await db.ecgs.clear()
+    })
+    await refresh()
+  }
+
   async function removeEcg(id: string): Promise<void> {
     const existing = await db.ecgs.get(id)
     if (existing === undefined) return
@@ -148,6 +196,9 @@ export const usePatientsStore = defineStore('patients', () => {
     saveResult,
     saveEcg,
     removeEcg,
+    exportArchive,
+    importArchive,
+    deleteAll,
   }
 })
 

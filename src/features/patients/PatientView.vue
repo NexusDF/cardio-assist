@@ -3,6 +3,8 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { CalculatorSnapshot } from '@/features/calculators/logic/drafts'
 import { heartRateFromRrMs } from '@/features/ecg/logic/measure'
+import TrendChart from '@/features/patients/TrendChart.vue'
+import { collectTrends } from '@/features/patients/logic/trends'
 import AppScreen from '@/shared/components/AppScreen.vue'
 import EcgPhoto from '@/features/patients/EcgPhoto.vue'
 import type { EcgRecord } from '@/features/patients/db'
@@ -44,6 +46,8 @@ const results = computed(() =>
 )
 
 const ecgs = computed(() => patientsStore.ecgs.filter((item) => item.patientId === patientId.value))
+
+const trends = computed(() => collectTrends(results.value, ecgs.value))
 
 const missing = computed(
   () => patientsStore.ready && !isNew.value && patientId.value !== null && patient.value === null,
@@ -218,6 +222,22 @@ async function remove() {
         {{ t('patients.saved') }}
       </p>
     </form>
+    <section v-if="!isNew && patient" class="mt-8 flex flex-col gap-3">
+      <h2 class="text-sm font-semibold text-ink">{{ t('patients.charts') }}</h2>
+      <p v-if="trends.qtc.length === 0 && trends.heartRate.length === 0" class="text-sm text-muted">
+        {{ t('patients.noCharts') }}
+      </p>
+      <TrendChart
+        v-if="trends.qtc.length > 0"
+        :title="t('patients.qtcChart')"
+        :points="trends.qtc"
+      />
+      <TrendChart
+        v-if="trends.heartRate.length > 0"
+        :title="t('patients.hrChart')"
+        :points="trends.heartRate"
+      />
+    </section>
     <section v-if="!isNew && patient" class="mt-8">
       <h2 class="text-sm font-semibold text-ink">{{ t('patients.results') }}</h2>
       <p v-if="results.length === 0" class="mt-2 text-sm text-muted">
